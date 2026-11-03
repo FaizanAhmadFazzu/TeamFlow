@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 
 import authRoutes from "./routes/authRoutes";
+import taskRoutes from "./routes/taskRoutes";
 
 import { protect } from "./middleware/authMiddleware";
 import { AuthRequest } from "./middleware/authMiddleware";
@@ -21,6 +22,7 @@ app.get("/api/health", (req, res) => {
 
 // Authentication routes
 app.use("/api/auth", authRoutes);
+app.use("/api/tasks", taskRoutes);
 
 app.get(
   "/api/protected",
