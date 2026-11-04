@@ -24,9 +24,33 @@ import {
 
 import { Task, TaskPriority, TaskStatus } from "@/types/task";
 
+
+const getStatusStyle = (status: string) => {
+  switch (status) {
+    case "completed":
+      return "bg-green-100 text-green-700";
+    case "in-progress":
+      return "bg-blue-100 text-blue-700";
+    default:
+      return "bg-slate-100 text-slate-600";
+  }
+};
+
+const getPriorityStyle = (priority: string) => {
+  switch (priority) {
+    case "high":
+      return "bg-red-100 text-red-700";
+    case "medium":
+      return "bg-orange-100 text-orange-700";
+    default:
+      return "bg-green-100 text-green-700";
+  }
+};
+
 export default function DashboardPage() {
   const router = useRouter();
 
+  const [userName, setUserName] = useState("User");
   const [tasks, setTasks] = useState<Task[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
@@ -62,9 +86,18 @@ export default function DashboardPage() {
   };
 
   useEffect(() => {
-    if (!localStorage.getItem("token")) {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
       router.replace("/login");
       return;
+    }
+
+    const storedUser = localStorage.getItem("user");
+
+    if (storedUser) {
+      const user = JSON.parse(storedUser);
+      setUserName(user.name);
     }
 
     fetchTasks();
@@ -195,15 +228,24 @@ export default function DashboardPage() {
         </button>
       </aside>
 
-      <main className="min-w-0 flex-1 p-5 md:p-8">
+      <main className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8">
         <header className="mb-8 flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold text-slate-900">
-              Dashboard
+              Welcome back, {userName}!
             </h2>
+
             <p className="mt-1 text-sm text-slate-500">
-              Manage and track your tasks.
+              Here's an overview of your team's tasks.
             </p>
+          </div>
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-600 font-semibold text-white">
+            {userName
+              .split(" ")
+              .map((word) => word[0])
+              .join("")
+              .slice(0, 2)
+              .toUpperCase()}
           </div>
 
           <button
@@ -215,7 +257,7 @@ export default function DashboardPage() {
           </button>
         </header>
 
-        <section className="mb-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {stats.map((stat) => {
             const Icon = stat.icon;
 
@@ -237,6 +279,38 @@ export default function DashboardPage() {
               </div>
             );
           })}
+        </section>
+        <section className="mb-8 rounded-xl border bg-white p-6 shadow-sm">
+          <div className="mb-3 flex items-center justify-between">
+            <div>
+              <h3 className="font-semibold text-slate-800">
+                Overall Progress
+              </h3>
+              <p className="text-sm text-slate-500">
+                Track your task completion
+              </p>
+            </div>
+
+            <span className="text-lg font-bold text-blue-600">
+              {tasks.length
+                ? Math.round((completed / tasks.length) * 100)
+                : 0}%
+            </span>
+          </div>
+
+          <div className="h-3 overflow-hidden rounded-full bg-slate-100">
+            <div
+              className="h-full rounded-full bg-blue-600 transition-all duration-500"
+              style={{
+                width: `${tasks.length ? (completed / tasks.length) * 100 : 0
+                  }%`,
+              }}
+            />
+          </div>
+
+          <p className="mt-2 text-xs text-slate-500">
+            {completed} of {tasks.length} tasks completed
+          </p>
         </section>
 
         <section className="rounded-xl border bg-white p-6 shadow-sm">
@@ -332,7 +406,7 @@ export default function DashboardPage() {
                           e.target.value as TaskStatus
                         )
                       }
-                      className="rounded-lg border px-3 py-2 text-sm"
+                      className={`rounded-lg border-0 px-3 py-2 text-sm font-medium ${getStatusStyle(task.status)}`}
                       aria-label={`Status for ${task.title}`}
                     >
                       <option value="todo">To Do</option>
@@ -340,8 +414,10 @@ export default function DashboardPage() {
                       <option value="completed">Completed</option>
                     </select>
 
-                    <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
-                      {task.priority}
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-semibold capitalize ${getPriorityStyle(task.priority)}`}
+                    >
+                      {task.priority} priority
                     </span>
                     {task.dueDate && (
                       <p className="mt-2 text-xs text-slate-500">
