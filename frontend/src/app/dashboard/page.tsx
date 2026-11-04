@@ -38,6 +38,10 @@ export default function DashboardPage() {
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState<TaskPriority>("medium");
 
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [priorityFilter, setPriorityFilter] = useState("all");
+  const [dueDate, setDueDate] = useState("");
+
   const fetchTasks = async () => {
     try {
       setError("");
@@ -79,12 +83,14 @@ export default function DashboardPage() {
         description,
         priority,
         status: "todo",
+        ...(dueDate && { dueDate }),
       });
 
       setTitle("");
       setDescription("");
       setPriority("medium");
       setShowForm(false);
+      setDueDate("");
 
       await fetchTasks();
     } catch (err: any) {
@@ -125,9 +131,19 @@ export default function DashboardPage() {
     router.replace("/login");
   };
 
-  const filteredTasks = tasks.filter((task) =>
-    task.title.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredTasks = tasks.filter((task) => {
+    const matchesSearch = task.title
+      .toLowerCase()
+      .includes(search.toLowerCase());
+
+    const matchesStatus =
+      statusFilter === "all" || task.status === statusFilter;
+
+    const matchesPriority =
+      priorityFilter === "all" || task.priority === priorityFilter;
+
+    return matchesSearch && matchesStatus && matchesPriority;
+  });
 
   const completed = tasks.filter(
     (task) => task.status === "completed"
@@ -253,6 +269,30 @@ export default function DashboardPage() {
             />
           </div>
 
+          <div className="mb-5 flex flex-wrap gap-3">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="rounded-lg border px-4 py-2 text-sm"
+            >
+              <option value="all">All Statuses</option>
+              <option value="todo">To Do</option>
+              <option value="in-progress">In Progress</option>
+              <option value="completed">Completed</option>
+            </select>
+
+            <select
+              value={priorityFilter}
+              onChange={(e) => setPriorityFilter(e.target.value)}
+              className="rounded-lg border px-4 py-2 text-sm"
+            >
+              <option value="all">All Priorities</option>
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+            </select>
+          </div>
+
           {error && (
             <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-600">
               {error}
@@ -303,6 +343,11 @@ export default function DashboardPage() {
                     <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
                       {task.priority}
                     </span>
+                    {task.dueDate && (
+                      <p className="mt-2 text-xs text-slate-500">
+                        Due: {new Date(task.dueDate).toLocaleDateString()}
+                      </p>
+                    )}
 
                     <button
                       onClick={() => handleDeleteTask(task._id)}
@@ -363,6 +408,13 @@ export default function DashboardPage() {
                 <option value="medium">Medium Priority</option>
                 <option value="high">High Priority</option>
               </select>
+              <input
+                type="date"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+                min={new Date().toISOString().split("T")[0]}
+                className="w-full rounded-lg border p-3"
+              />
 
               <button
                 type="submit"
