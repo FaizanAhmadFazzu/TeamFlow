@@ -6,12 +6,14 @@ import rateLimit from "express-rate-limit";
 import authRoutes from "./routes/authRoutes";
 import taskRoutes from "./routes/taskRoutes";
 
-import { protect } from "./middleware/authMiddleware";
-import { AuthRequest } from "./middleware/authMiddleware";
+import { protect, AuthRequest } from "./middleware/authMiddleware";
+
 import {
   notFound,
   errorHandler,
 } from "./middleware/errorMiddleware";
+
+const app = express();
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -23,13 +25,10 @@ const authLimiter = rateLimit({
   },
 });
 
-const app = express();
-
-
-app.use(express.json());
-
+// Security middleware
 app.use(helmet());
 
+// CORS middleware
 app.use(
   cors({
     origin: [
@@ -41,8 +40,10 @@ app.use(
   })
 );
 
+// Body parser - only once
 app.use(express.json({ limit: "10kb" }));
 
+// Health route
 app.get("/api/health", (req, res) => {
   res.status(200).json({
     success: true,
@@ -50,22 +51,20 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-// Authentication routes
+// API routes
 app.use("/api/auth", authLimiter, authRoutes);
 app.use("/api/tasks", taskRoutes);
 
-app.get(
-  "/api/protected",
-  protect,
-  (req: AuthRequest, res) => {
-    res.status(200).json({
-      success: true,
-      message: "You accessed a protected route",
-      userId: req.userId,
-    });
-  }
-);
+// Protected test route
+app.get("/api/protected", protect, (req: AuthRequest, res) => {
+  res.status(200).json({
+    success: true,
+    message: "You accessed a protected route",
+    userId: req.userId,
+  });
+});
 
+// Error handling
 app.use(notFound);
 app.use(errorHandler);
 
