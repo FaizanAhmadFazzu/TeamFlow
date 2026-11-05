@@ -8,6 +8,10 @@ import taskRoutes from "./routes/taskRoutes";
 
 import { protect } from "./middleware/authMiddleware";
 import { AuthRequest } from "./middleware/authMiddleware";
+import {
+  notFound,
+  errorHandler,
+} from "./middleware/errorMiddleware";
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -56,5 +60,8 @@ app.get(
     });
   }
 );
+
+app.use(notFound);
+app.use(errorHandler);
 
 export default app;
