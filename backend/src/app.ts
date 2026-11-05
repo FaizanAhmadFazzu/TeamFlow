@@ -34,6 +34,7 @@ app.use(
     origin: [
       "http://localhost:3000",
       "https://team-flow-nu-two.vercel.app",
+      "https://team-flow-mtduhfsvc-team-flow9.vercel.app",
     ],
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
