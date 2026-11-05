@@ -1,9 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-
-interface JwtPayload {
-  userId: string;
-}
+import { verifyToken } from "../utils/jwt";
 
 export interface AuthRequest extends Request {
   userId?: string;
@@ -13,35 +10,32 @@ export const protect = (
   req: AuthRequest,
   res: Response,
   next: NextFunction
-): void => {
+) => {
   try {
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      res.status(401).json({
-        success: false,
-        message: "Authentication required",
+      return res.status(401).json({
+        message: "Authentication token required",
       });
-      return;
     }
 
     const token = authHeader.split(" ")[1];
 
-    const secret = process.env.JWT_SECRET;
+    const decoded = verifyToken(token) as jwt.JwtPayload;
 
-    if (!secret) {
-      throw new Error("JWT_SECRET is missing");
+    if (typeof decoded.userId !== "string") {
+      return res.status(401).json({
+        message: "Invalid authentication token",
+      });
     }
-
-    const decoded = jwt.verify(token, secret) as JwtPayload;
 
     req.userId = decoded.userId;
 
     next();
   } catch (error) {
-    res.status(401).json({
-      success: false,
-      message: "Invalid or expired token",
+    return res.status(401).json({
+      message: "Invalid or expired authentication token",
     });
   }
 };

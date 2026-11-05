@@ -1,26 +1,12 @@
 import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
 
 import User from "../models/User";
 import {
   registerSchema,
   loginSchema,
 } from "../validators/authValidators";
-
-const generateToken = (userId: string): string => {
-  const secret = process.env.JWT_SECRET;
-
-  if (!secret) {
-    throw new Error("JWT_SECRET is missing");
-  }
-
-  return jwt.sign(
-    { userId },
-    secret,
-    { expiresIn: "1d" }
-  );
-};
+import { generateToken } from "../utils/jwt";
 
 // REGISTER API
 export const registerUser = async (
